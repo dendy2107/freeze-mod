@@ -4,7 +4,13 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 project(freeze-mod VERSION 1.0.0)
 
-find_package(Geode REQUIRED)
+if (NOT DEFINED ENV{GEODE_SDK})
+    message(FATAL_ERROR "Unable to find Geode SDK! Please define GEODE_SDK.")
+else()
+    message(STATUS "Found Geode SDK: $ENV{GEODE_SDK}")
+endif()
+
+add_subdirectory($ENV{GEODE_SDK} ${CMAKE_CURRENT_BINARY_DIR}/geode)
 
 add_library(${PROJECT_NAME} SHARED src/main.cpp)
 

@@ -26,7 +26,4 @@ class $modify(MyLoadingLayer, LoadingLayer) {
         }
         LoadingLayer::keyDown(key, timestamp);
     }
-};    void resubscribeKey(float) {
-        this->schedule(schedule_selector(MyLoadingLayer::checkKey), 0.1f);
-    }
 };

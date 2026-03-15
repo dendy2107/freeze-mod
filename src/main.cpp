@@ -4,22 +4,29 @@
 using namespace geode::prelude;
 
 class $modify(MyLoadingLayer, LoadingLayer) {
-    bool m_frozen = false;
+    struct Fields {
+        bool m_frozen = false;
+    };
 
-    void loadingFinished() {
-        m_frozen = true;
-        log::info("Loading frozen! Press F12 to continue to menu");
+    void loadAssets() {
+        if (m_fields->m_frozen) return;
+        LoadingLayer::loadAssets();
+    }
 
-        auto listener = new EventListener<keybinds::InvokeBindFilter>(
+    bool init(bool fromReload) {
+        if (!LoadingLayer::init(fromReload)) return false;
+
+        auto listener = addEventListener<keybinds::InvokeBindFilter>(
             [this](keybinds::InvokeBindEvent* e) {
-                if (e->isDown() && m_frozen) {
-                    m_frozen = false;
-                    LoadingLayer::loadingFinished();
+                if (e->isDown()) {
+                    m_fields->m_frozen = !m_fields->m_frozen;
+                    log::info("Freeze: {}", m_fields->m_frozen);
                 }
                 return ListenControl::Continue;
             },
-            keybinds::InvokeBindFilter(nullptr, "freeze-mod/continue"_spr)
+            "freeze-mod/toggle"_spr
         );
-        listener->retain();
+
+        return true;
     }
 };

@@ -1,29 +1,30 @@
 #include <Geode/Geode.hpp>
 #include <Geode/modify/LoadingLayer.hpp>
+#include <Geode/modify/CCKeyboardDispatcher.hpp>
 
 using namespace geode::prelude;
 
-class $modify(MyLoadingLayer, LoadingLayer) {
-    struct Fields {
-        bool m_frozen = false;
-    };
+static bool s_frozen = false;
 
+class $modify(MyCCKeyboardDispatcher, CCKeyboardDispatcher) {
+    bool dispatchKeyboardMSG(enumKeyCodes key, bool isKeyDown, bool isKeyRepeat) {
+        if (isKeyDown && !isKeyRepeat && key == enumKeyCodes::KEY_F) {
+            s_frozen = !s_frozen;
+            log::info("Freeze toggled: {}", s_frozen);
+        }
+        return CCKeyboardDispatcher::dispatchKeyboardMSG(key, isKeyDown, isKeyRepeat);
+    }
+};
+
+class $modify(MyLoadingLayer, LoadingLayer) {
     void loadAssets() {
-        if (m_fields->m_frozen) return;
+        if (s_frozen) return;
         LoadingLayer::loadAssets();
     }
 
-    bool init(bool fromReload) {
-        if (!LoadingLayer::init(fromReload)) return false;
-        this->setKeyboardEnabled(true);
-        return true;
-    }
-
-    void keyDown(enumKeyCodes key, double timestamp) {
-        if (key == enumKeyCodes::KEY_F) {
-            m_fields->m_frozen = !m_fields->m_frozen;
-            log::info("Freeze: {}", m_fields->m_frozen);
-        }
-        LoadingLayer::keyDown(key, timestamp);
+    void loadingFinished() {
+        s_frozen = true;
+        log::info("Loading finished — auto-frozen. Press F to continue.");
+        // не викликаємо LoadingLayer::loadingFinished() — не переходимо в меню
     }
 };
